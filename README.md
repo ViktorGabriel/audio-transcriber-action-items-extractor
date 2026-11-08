@@ -8,7 +8,7 @@ sdk_version: 5.20.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Transcrição de áudio e extração automatizada de itens de ação
+short_description: Transcrição de áudio e extração de itens de ação
 ---
 
 # 🎙️ Audio Transcriber & Action Items Extractor
