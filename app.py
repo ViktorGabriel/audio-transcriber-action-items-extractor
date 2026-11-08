@@ -35,20 +35,34 @@ def process_audio(audio_path: str | None) -> Tuple[str, str, str]:
             "Nenhum item de ação detectado.",
         )
 
-    # Execução via serviços estruturados (stubs da Etapa 1)
-    transcription = transcriber_service.transcribe(audio_path=audio_path)
-    extraction = extractor_service.extract(transcription_text=transcription.raw_text)
-
-    # Formatação das ações para Markdown
-    action_items_md = "### ✅ Itens de Ação Detectados:\n\n"
-    for item in extraction.action_items:
-        action_items_md += (
-            f"- **[{item.priority.value.upper()}]** {item.task}\n"
-            f"  - **Responsável:** {item.assignee or 'Não atribuído'}\n"
-            f"  - **Prazo:** {item.deadline or 'Não informado'}\n\n"
+    try:
+        transcription_text, detected_lang = transcriber_service.transcribe(
+            audio_path=audio_path
+        )
+        extraction = extractor_service.extract(
+            transcription_text=transcription_text
         )
 
-    return transcription.raw_text, extraction.summary, action_items_md
+        # Formatação das ações para Markdown
+        action_items_md = (
+            f"### ✅ Itens de Ação Detectados (Idioma: {detected_lang.upper()}):\n\n"
+        )
+        for item in extraction.action_items:
+            priority_label = (item.priority or "media").upper()
+            action_items_md += (
+                f"- **[{priority_label}]** {item.task}\n"
+                f"  - **Responsável:** {item.assignee or 'Não atribuído'}\n"
+                f"  - **Prazo Estimado:** {item.deadline_hint or 'Não informado'}\n\n"
+            )
+
+        return transcription_text, extraction.summary, action_items_md
+
+    except Exception as exc:
+        return (
+            f"Erro durante o processamento: {str(exc)}",
+            "Falha ao gerar resumo.",
+            "Falha ao extrair itens de ação.",
+        )
 
 
 def create_demo() -> gr.Blocks:
@@ -72,7 +86,7 @@ def create_demo() -> gr.Blocks:
                 audio_input = gr.Audio(
                     sources=["upload", "microphone"],
                     type="filepath",
-                    label="Entrada de Áudio (WAV, MP3, M4A)",
+                    label="Entrada de Áudio (WAV, MP3, M4A, OGG, FLAC)",
                 )
                 process_btn = gr.Button("Processar Áudio", variant="primary")
 

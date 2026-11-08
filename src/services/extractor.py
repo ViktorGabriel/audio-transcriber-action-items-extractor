@@ -4,7 +4,7 @@ Projetado para extrair tarefas, responsáveis, prioridades e decisões a partir 
 """
 
 from typing import Optional
-from src.schemas import ExtractionResult, ActionItem, PriorityLevel
+from src.schemas import ExtractionResult, ActionItem
 
 
 class ActionItemExtractor:
@@ -40,7 +40,7 @@ class ActionItemExtractor:
         Inicializa o pipeline de geração de texto sob demanda (Lazy Loading).
         """
         if self._pipeline is None:
-            # Em etapas futuras:
+            # Em etapas futuras de integração com LLM:
             # from transformers import pipeline
             # self._pipeline = pipeline("text-generation", model=self.model_name, device="cpu")
             pass
@@ -70,18 +70,18 @@ class ActionItemExtractor:
 
         # Stub: Estrutura simulada para validação de contratos e interfaces
         dummy_action = ActionItem(
-            task="Stub: Revisar o escopo do projeto com o time de engenharia",
+            task="Revisar o escopo do projeto com o time de engenharia",
             assignee="Viktor",
-            priority=PriorityLevel.HIGH,
-            deadline="Próxima sprint",
-            context="Mencionado durante a definição de requisitos técnicos",
+            priority="alta",
+            deadline_hint="Próxima sprint",
         )
 
         return ExtractionResult(
-            summary="Stub: Reunião de alinhamento com foco em definição de arquitetura.",
+            summary="Reunião de alinhamento com foco em definição de arquitetura.",
             action_items=[dummy_action],
+            language="pt",
             key_decisions=[
-                "Stub: Decidido utilizar faster-whisper para economia de recursos de CPU.",
-                "Stub: Interface construída em Gradio para compatibilidade com Hugging Face Spaces.",
+                "Decidido utilizar faster-whisper com quantização int8 em CPU.",
+                "Interface construída em Gradio para o Hugging Face Spaces.",
             ],
         )
