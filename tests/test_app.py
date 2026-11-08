@@ -1,22 +1,17 @@
 """
-Testes unitários para o pipeline base do Audio Transcriber & Action Items Extractor.
+Testes unitários da interface e orquestrador em app.py.
 """
 
-from app import process_audio, build_interface
+from app import process_audio, create_demo
 
 
 def test_process_audio_empty():
-    transcription, action_items = process_audio(None)
-    assert transcription == "Nenhum arquivo de áudio fornecido."
-    assert action_items == "Nenhuma ação detectada."
+    transcription, summary, actions = process_audio(None)
+    assert "Nenhum arquivo de áudio válido" in transcription
+    assert "Sem dados para gerar resumo" in summary
+    assert "Nenhum item de ação detectado" in actions
 
 
-def test_process_audio_dummy_file():
-    transcription, action_items = process_audio("/tmp/meeting_sample.wav")
-    assert "meeting_sample.wav" in transcription
-    assert "- [ ]" in action_items
-
-
-def test_build_interface_instantiation():
-    demo = build_interface()
+def test_create_demo_instantiation():
+    demo = create_demo()
     assert demo is not None

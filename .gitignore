@@ -3,7 +3,7 @@
 .env.*
 !.env.example
 
-# AI Tooling & Local Prompts (Never Commit to Public Repos)
+# AI Tooling & Local Prompts (Zero-Leak Policy)
 .agents/
 .agent/
 .claude/
@@ -40,17 +40,20 @@ wheels/
 .installed.cfg
 *.egg
 
-# Testing & Coverage
+# Testing & Linters
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Hugging Face & Audio local cache/files
-.cache/
+# Audio / Temp uploads & Caches
 *.mp3
 *.wav
 *.m4a
 *.flac
 *.ogg
+*.aac
 tmp/
 temp/
+.cache/
