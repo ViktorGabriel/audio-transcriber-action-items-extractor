@@ -3,6 +3,6 @@ Módulo de serviços de negócio: transcrição (Whisper) e extração semântic
 """
 
 from src.services.transcriber import AudioTranscriber
-from src.services.extractor import ActionItemExtractor
+from src.services.extractor import ActionItemExtractor, extract_actions
 
-__all__ = ["AudioTranscriber", "ActionItemExtractor"]
+__all__ = ["AudioTranscriber", "ActionItemExtractor", "extract_actions"]

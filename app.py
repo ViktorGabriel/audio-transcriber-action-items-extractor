@@ -39,8 +39,9 @@ def process_audio(audio_path: str | None) -> Tuple[str, str, str]:
         transcription_text, detected_lang = transcriber_service.transcribe(
             audio_path=audio_path
         )
-        extraction = extractor_service.extract(
-            transcription_text=transcription_text
+        extraction = extractor_service.extract_actions(
+            transcript=transcription_text,
+            language=detected_lang,
         )
 
         # Formatação das ações para Markdown

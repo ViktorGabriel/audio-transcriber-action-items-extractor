@@ -1,14 +1,20 @@
 """
-Testes unitários dos serviços de transcrição e extração.
+Testes unitários dos serviços de transcrição e extração semântica.
 """
 
+import json
 import os
 import tempfile
 from unittest.mock import MagicMock
 import pytest
 
+from src.schemas import ExtractionResult
 from src.services.transcriber import AudioTranscriber
-from src.services.extractor import ActionItemExtractor
+from src.services.extractor import (
+    ActionItemExtractor,
+    extract_actions,
+    sanitize_json_response,
+)
 
 
 def test_transcriber_singleton_pattern():
@@ -59,12 +65,10 @@ def test_transcriber_validate_unsupported_format():
 def test_transcriber_transcribe_mocked():
     transcriber = AudioTranscriber()
 
-    # Cria arquivo temporário de áudio válido com bytes simulados
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
         f.write(b"RIFF dummy audio content")
         temp_path = f.name
 
-    # Mock do WhisperModel
     mock_model = MagicMock()
     mock_segment = MagicMock()
     mock_segment.text = " Transcrição de teste concluída. "
@@ -83,16 +87,104 @@ def test_transcriber_transcribe_mocked():
             os.remove(temp_path)
 
 
+# =========================================================================
+# Testes do Extrator de Ações e Sanitização
+# =========================================================================
+
+def test_sanitize_json_response_clean():
+    sample = '{"summary": "Teste", "action_items": []}'
+    assert sanitize_json_response(sample) == sample
+
+
+def test_sanitize_json_response_markdown_blocks():
+    sample = '```json\n{"summary": "Teste", "action_items": []}\n```'
+    assert sanitize_json_response(sample) == '{"summary": "Teste", "action_items": []}'
+
+
+def test_sanitize_json_response_conversational():
+    sample = (
+        'Claro! Aqui está o JSON:\n'
+        '```json\n{"summary": "Reunião de alinhamento", "action_items": []}\n```\n'
+        'Espero ter ajudado!'
+    )
+    expected = '{"summary": "Reunião de alinhamento", "action_items": []}'
+    assert sanitize_json_response(sample) == expected
+
+
+def test_sanitize_json_response_empty():
+    assert sanitize_json_response("") == "{}"
+    assert sanitize_json_response(None) == "{}"
+
+
 def test_extractor_empty_text():
     extractor = ActionItemExtractor()
     with pytest.raises(ValueError, match="não pode ser vazio"):
-        extractor.extract("")
+        extractor.extract_actions("")
 
 
-def test_extractor_success():
-    extractor = ActionItemExtractor()
-    result = extractor.extract("Texto transcrito de teste para extração de tarefas.")
-    assert result.summary is not None
-    assert len(result.action_items) > 0
+def test_extractor_with_mocked_inference_client():
+    extractor = ActionItemExtractor(hf_token="fake_token")
+
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = json.dumps({
+        "summary": "Resumo de alinhamento de sprint.",
+        "action_items": [
+            {
+                "task": "Atualizar dependências de segurança",
+                "assignee": "Viktor",
+                "priority": "alta",
+                "deadline_hint": "Amanhã",
+            }
+        ],
+        "language": "pt",
+        "key_decisions": ["Aprovado o uso do Qwen2.5 para extração."],
+    })
+    mock_response.choices = [mock_choice]
+    mock_client.chat_completion.return_value = mock_response
+
+    extractor._inference_client = mock_client
+
+    result = extractor.extract_actions("O Viktor precisa atualizar as dependências até amanhã.")
+    assert "sprint" in result.summary
+    assert len(result.action_items) == 1
+    assert result.action_items[0].assignee == "Viktor"
+    assert result.action_items[0].priority == "alta"
     assert result.language == "pt"
-    assert result.action_items[0].deadline_hint is not None
+
+
+def test_extractor_json_error_fallback():
+    extractor = ActionItemExtractor(hf_token="fake_token")
+
+    mock_client = MagicMock()
+    mock_choice = MagicMock()
+    # Retorna texto não JSON
+    mock_choice.message.content = "Desculpe, não consegui estruturar em JSON."
+    mock_response = MagicMock()
+    mock_response.choices = [mock_choice]
+    mock_client.chat_completion.return_value = mock_response
+
+    extractor._inference_client = mock_client
+
+    result = extractor.extract_actions("Discussão aberta sobre deploy.")
+    assert "Sumário preliminar:" in result.summary
+    assert result.action_items == []
+    assert result.language == "pt"
+
+
+def test_extract_actions_function_wrapper(monkeypatch):
+    mock_extractor = MagicMock()
+    mock_extractor.extract_actions.return_value = ExtractionResult(
+        summary="Resumo de teste via wrapper",
+        action_items=[],
+        language="pt",
+        key_decisions=["Decisão de teste"],
+    )
+    monkeypatch.setattr(
+        "src.services.extractor.ActionItemExtractor.extract_actions",
+        mock_extractor.extract_actions,
+    )
+    result = extract_actions("Transcrição rápida para teste.")
+    assert result is not None
+    assert result.summary == "Resumo de teste via wrapper"
