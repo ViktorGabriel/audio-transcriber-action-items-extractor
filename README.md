@@ -3,28 +3,24 @@ title: Audio Transcriber & Action Items Extractor
 emoji: 🎙️
 colorFrom: blue
 colorTo: indigo
-sdk: gradio
-sdk_version: 5.20.0
-app_file: app.py
+sdk: static
 pinned: false
 license: mit
-short_description: Transcrição de áudio e extração inteligente de itens de ação
+short_description: Transcrição de áudio e extração inteligente de itens de ação via Gradio-Lite
 ---
 
-# 🎙️ Audio Transcriber & Action Items Extractor
+# 🎙️ Audio Transcriber & Action Items Extractor (Gradio-Lite)
 
-Aplicação corporativa desenvolvida para **Hugging Face Spaces** com foco em transcrição de reuniões em áudio e extração automatizada de itens de ação (*action items*), responsáveis e prazos.
+Aplicação corporativa desenvolvida para **Hugging Face Spaces (Static)** utilizando **Gradio-Lite** (WebAssembly / Pyodide). Executa diretamente no navegador sem custos de servidor de backend.
 
 ---
 
 ## 🚀 Arquitetura & Tecnologias
 
-- **Interface:** [Gradio](https://www.gradio.app/)
-- **Modelos de Transcrição:** OpenAI Whisper (`openai/whisper-large-v3-turbo`)
-- **Processamento de Áudio:** `ffmpeg`
-- **Extração Semântica:** Hugging Face Transformers & Pipelines de Linguagem
-- **CI/CD:** GitHub Actions com testes automatizados e linters
-- **Ambiente:** Hugging Face Spaces (Python 3.12)
+- **Ambiente Space:** `sdk: static` (Hospedagem estática gratuita do Hugging Face)
+- **Frontend / Engine:** [Gradio-Lite](https://www.gradio.app/guides/gradio-lite) (`@gradio/lite` via WebAssembly & Pyodide)
+- **Execução:** 100% Client-side no navegador (ou chamadas via Hugging Face Serverless Inference API / Web APIs)
+- **CI/CD:** GitHub Actions com testes automatizados e validações de integridade
 
 ---
 
@@ -34,58 +30,40 @@ Aplicação corporativa desenvolvida para **Hugging Face Spaces** com foco em tr
 .
 ├── .github/
 │   └── workflows/
-│       └── ci.yml          # Pipeline de integração contínua (Lint + Testes)
+│       └── ci.yml          # Pipeline de integração contínua
 ├── tests/
-│   └── test_app.py         # Suíte de testes unitários
+│   └── test_app.py         # Testes de integridade da interface e lógica
 ├── .env.example            # Template de variáveis de ambiente
 ├── .gitignore              # Regras de exclusão e higiene de repositório
-├── app.py                  # Ponto de entrada da aplicação Gradio
-├── packages.txt            # Dependências de sistema no Hugging Face (ffmpeg)
-├── requirements.txt        # Dependências Python gerenciadas
-└── README.md               # Metadados do Space e documentação técnica
+├── index.html              # Ponto de entrada estático com Gradio-Lite
+├── app.py                  # Lógica Python compatível com Pyodide / Gradio
+└── README.md               # Metadados do Space (sdk: static) e documentação técnica
 ```
 
 ---
 
 ## 🛠️ Como Executar Localmente
 
-### 1. Pré-requisitos
-- Python 3.12+
-- `ffmpeg` instalado no sistema operacional
+### Opção 1: Servidor HTTP Local (Navegador)
 
-### 2. Instalação
+Como o projeto é estático com WebAssembly, você pode rodar qualquer servidor HTTP simples:
 
 ```bash
-# Crie e ative um ambiente virtual
-python -m venv .venv
-# No Linux/macOS:
-# source .venv/bin/activate
-# No Windows:
-# .venv\Scripts\Activate.ps1
+# Com Python nativo:
+python -m http.server 7860
+```
+Acesse `http://localhost:7860` no navegador.
 
-# Instale as dependências
+### Opção 2: Python / Gradio Tradicional
+
+```bash
 pip install -r requirements.txt
-```
-
-### 3. Configuração de Variáveis de Ambiente
-
-Copie o arquivo de exemplo e preencha suas chaves caso necessário:
-```bash
-cp .env.example .env
-```
-
-### 4. Executando a Aplicação
-
-```bash
 python app.py
 ```
-Acesse a aplicação no navegador em `http://localhost:7860`.
 
 ---
 
 ## 🧪 Testes Automatizados
-
-Para executar os testes unitários:
 
 ```bash
 pytest -v
@@ -95,4 +73,4 @@ pytest -v
 
 ## 📄 Licença
 
-Distribuído sob a licença MIT. Consulte o arquivo correspondente para mais informações.
+Distribuído sob a licença MIT.
